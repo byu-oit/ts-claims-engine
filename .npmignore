@@ -1,4 +1,5 @@
 src/
 test/
+.idea/
 README.md
 tslint.json
