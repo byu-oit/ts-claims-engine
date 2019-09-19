@@ -9,7 +9,7 @@ import {
     ValidationError
 } from './types';
 
-export default abstract class ClaimsAdjudicator {
+export abstract class ClaimsAdjudicator {
     public abstract conceptMap: Concepts;
 
     public async verifyClaims(claims: any): Promise<ClaimsResponse> {
