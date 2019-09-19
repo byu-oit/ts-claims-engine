@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "commonjs",
+    "sourceMap": true,
+    "allowJs": false,
+    "declaration": true,
+    "removeComments": false,
+    "resolveJsonModule": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "moduleResolution": "node",
+    "lib": [
+      "es7",
+      "es2017.object"
+    ],
+    "outDir": "dist"
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "compileOnSave": false
+}

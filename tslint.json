@@ -1,0 +1,32 @@
+{
+  "defaultSeverity": "error",
+  "extends": [
+    "tslint:recommended"
+  ],
+  "rules": {
+    "quotemark": [
+      true,
+      "single"
+    ],
+    "object-literal-sort-keys": false,
+    "object-literal-shorthand": false,
+    "object-literal-key-quotes": false,
+    "indent": [true, "spaces", 2],
+    "whitespace": [
+      true,
+      "check-decl",
+      "check-operator",
+      "check-separator",
+      "check-type"
+    ],
+    "interface-name": false,
+    "trailing-comma": false,
+    "arrow-parens": false,
+    "max-line-length": false,
+    "align": false,
+    "max-classes-per-file": false,
+    "no-console": false,
+    "semicolon": [true, "always", "strict-bound-class-methods"]
+  },
+  "rulesDirectory": []
+}
