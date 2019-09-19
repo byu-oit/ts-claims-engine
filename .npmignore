@@ -1,5 +1,5 @@
 src/
 test/
 .idea/
-README.md
+tsconfig.json
 tslint.json
