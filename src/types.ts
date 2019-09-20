@@ -32,7 +32,7 @@ export interface ClaimItem {
 
 export interface Claim {
     subject: string;
-    mode: 'ALL' | 'ANY' | 'ONE';
+    mode: 'all' | 'any' | 'one';
     claims: ClaimItem[];
 }
 
@@ -50,7 +50,7 @@ export interface ConceptInfo {
     longDescription: string;
     type: string;
     relationships: Relationship[];
-    qualifiers?: string[];
+    qualifiers: string[];
 }
 
 export interface ConceptOptions<T> {

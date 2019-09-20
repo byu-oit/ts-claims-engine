@@ -2,7 +2,7 @@ import {assert} from 'chai';
 import {ClaimsAdjudicator, Concept} from '../src';
 
 describe('Claims Adjudicator', () => {
-    const subjects: {[key: string]: {age: number; birth_date: string; favorite_color: string;}} = {
+    const subjects: { [key: string]: { age: number; birth_date: string; favorite_color: string; } } = {
         '123456789': {
             'age': 23,
             'birth_date': '1995-10-23',
@@ -32,9 +32,8 @@ describe('Claims Adjudicator', () => {
         age: new Concept({
             description: 'The subject is of age',
             longDescription: 'Determines if the subject is of an age',
-            type: 'number',
+            type: 'int',
             relationships: ['gt', 'gt_or_eq', 'lt', 'lt_or_eq', 'eq', 'not_eq'],
-            qualifiers: [],
             getValue: async (id: string) => subjects[id].age
         }),
         favorite_color: new Concept({
@@ -42,12 +41,11 @@ describe('Claims Adjudicator', () => {
             longDescription: 'The subject considers their favorite color to be',
             type: 'string',
             relationships: ['eq', 'not_eq'],
-            qualifiers: [],
             getValue: async (id: string) => subjects[id].favorite_color
         })
     };
     const claims = {
-        'claim1': {
+        'trueClaim': {
             'subject': '123456789',
             'claims': [
                 {
@@ -57,7 +55,7 @@ describe('Claims Adjudicator', () => {
                 }
             ]
         },
-        'claim2': {
+        'falseClaim': {
             'subject': '987654321',
             'claims': [
                 {
@@ -78,18 +76,27 @@ describe('Claims Adjudicator', () => {
     describe('getConcepts', () => {
         it('will return the concepts list', () => {
             const concepts = engine.getConcepts();
-            const concept = concepts[0];
-            assert.strictEqual(concepts.length, 1);
+            assert.strictEqual(concepts.length, 3);
 
-            assert.isString(concept.description);
-            assert.isString(concept.longDescription);
-            assert.isString(concept.type);
-            assert.isArray(concept.qualifiers);
+            concepts.forEach(concept => {
+                assert.isString(concept.description);
+                assert.isString(concept.longDescription);
+                assert.isString(concept.type);
+                assert.isArray(concept.qualifiers);
+                concept.qualifiers.forEach(qualifier => {
+                    assert.isString(qualifier);
+                });
+                assert.isArray(concept.relationships);
+                concept.relationships.forEach(relationship => {
+                    assert.isTrue(['gt', 'gt_or_eq', 'lt', 'lt_or_eq', 'eq', 'not_eq'].includes(relationship))
+                })
+            })
         });
     });
+
     describe('getConcept', () => {
         it('will return the concept when it exists', () => {
-            const concept = engine.getConcept('test_concept');
+            const concept = engine.getConcept('subject_exists');
             assert.isString(concept.description);
             assert.isString(concept.longDescription);
             assert.isString(concept.type);
@@ -101,19 +108,35 @@ describe('Claims Adjudicator', () => {
             assert.isUndefined(concept);
         });
     });
+
     describe('conceptExists', () => {
         it('will return true when the concept exists', () => {
-            const conceptFound = engine.conceptExists('test_concept');
-            assert.isTrue(conceptFound)
+            assert.isTrue(engine.conceptExists('subject_exists'));
+            assert.isTrue(engine.conceptExists('age'));
+            assert.isTrue(engine.conceptExists('favorite_color'));
         });
         it('will return false when the concept does not exists', () => {
-            const conceptFound = engine.conceptExists('not_test_concept');
-            assert.isFalse(conceptFound)
-        })
+            assert.isFalse(engine.conceptExists('does_not_exist'));
+        });
     });
-    describe('verifyClaim', () => {
-        it('will verify a single valid claim', () => {
 
+    describe('verifyClaim', () => {
+        it('will return true for a true claim', async () => {
+            const verified = await engine.verifyClaim(claims['trueClaim']);
+            assert.isTrue(verified);
+        });
+        it('will return false for a false claim', async () => {
+            const verified = await engine.verifyClaim(claims['falseClaim']);
+            assert.isFalse(verified);
+        });
+    });
+
+    describe('verifyClaims', () => {
+        it('will return an object, listing the claims verification responses', async () => {
+            const responses = await engine.verifyClaims(claims);
+            assert.hasAllKeys(responses, ['trueClaim', 'falseClaim']);
+            assert.isTrue(responses['trueClaim']);
+            assert.isFalse(responses['falseClaim']);
         })
     })
 });

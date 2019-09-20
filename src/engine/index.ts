@@ -13,8 +13,8 @@ import {Concept} from './concept';
 export class ClaimsAdjudicator {
     private readonly conceptMap: Concepts;
 
-    public async verifyClaims(claims: any): Promise<ClaimsResponse> {
-        if (claims !== null || typeof claims !== 'object') {
+    public verifyClaims = async (claims: any): Promise<ClaimsResponse> => {
+        if (claims === null || typeof claims !== 'object') {
             throw new BadRequest(`Claims must be a non-null object.`);
         }
         const response: ClaimsResponse = {};
@@ -25,9 +25,9 @@ export class ClaimsAdjudicator {
             response[key] = await this.verifyClaim(claims[key]);
         }
         return response;
-    }
+    };
 
-    public async verifyClaim(claim: any): Promise<boolean | BadRequest> {
+    public verifyClaim = async (claim: any): Promise<boolean | BadRequest> => {
         try {
             this.validateClaim(claim);
         } catch (e) {
@@ -35,20 +35,20 @@ export class ClaimsAdjudicator {
         }
 
         const {claims, mode, subject} = claim;
-        if (['ONE', 'ANY'].includes(mode)) {
+        if (['one', 'any'].includes(mode)) {
             return this.testClaimsAny(subject, claims);
         } else {
             return this.testClaimsAll(subject, claims);
         }
-    }
+    };
 
-    public conceptExists(key: string): boolean {
+    public conceptExists = (key: string): boolean => {
         return Object.prototype.hasOwnProperty.call(this.conceptMap, key);
-    }
+    };
 
-    public getConcept(key: string): Concept<any> {
+    public getConcept = (key: string): Concept<any> => {
         return this.conceptMap[key];
-    }
+    };
 
     public getConcepts = (): ConceptInfo[] => {
         return Object.entries(this.conceptMap)
@@ -57,7 +57,7 @@ export class ClaimsAdjudicator {
             });
     };
 
-    private async testClaim(subject: string, claim: ClaimItem): Promise<boolean> {
+    private testClaim = async (subject: string, claim: ClaimItem): Promise<boolean> => {
         const {compare, cast, getValue} = this.getConcept(claim.concept);
         switch (claim.relationship.toLowerCase()) {
             case 'gt': {
@@ -81,31 +81,32 @@ export class ClaimsAdjudicator {
             default:
                 return false; // Unrecognized Relationship
         }
-    }
+    };
 
-    private async testClaimsAll(subject: string, claims: ClaimItem[]): Promise<boolean> {
+    private testClaimsAll = async (subject: string, claims: ClaimItem[]): Promise<boolean> => {
         for (const claim of claims) {
             if (!await this.testClaim(subject, claim)) {
                 return false;
             }
         }
         return true;
-    }
+    };
 
-    private async testClaimsAny(subject: string, claims: ClaimItem[]): Promise<boolean> {
+    private testClaimsAny = async (subject: string, claims: ClaimItem[]): Promise<boolean> => {
         for (const claim of claims) {
             if (await this.testClaim(subject, claim)) {
                 return true;
             }
         }
         return false;
-    }
+    };
 
-    private validateClaim(claim: any): void {
+    private validateClaim = (claim: any): void => {
         if (claim === null || typeof claim !== 'object') {
             throw new ValidationError(`Claim must be an non-null object.`);
         }
 
+        // Must have subjectExists concept
         const concept = Object.keys(this.conceptMap).find(prop => camelCase(prop) === 'subjectExists');
         const subjectExists = typeof claim.subject === 'string'
             && concept
@@ -115,8 +116,7 @@ export class ClaimsAdjudicator {
             throw new UnidentifiedSubjectError(`Unidentified subject ${claim.subject}.`);
         }
 
-        const validMode = claim.mode !== undefined
-            && ['ALL', 'ANY', 'ONE'].includes(claim.mode);
+        const validMode = ['all', 'any', 'one', undefined].includes(claim.mode);
 
         if (!validMode) {
             throw new ValidationError(`Invalid mode in ClaimItem: ${claim.mode}.`);
@@ -129,20 +129,27 @@ export class ClaimsAdjudicator {
         if (!validClaims) {
             throw new ValidationError(`Invalid claims in ClaimItem ${claim.claims}.`);
         }
-    }
+    };
 
-    private validateClaimItem(claimItem: any): boolean {
-        return claimItem !== null
-            && typeof claimItem === 'object'
+    private validateClaimItem = (claimItem: any): boolean => {
+        const concept = this.getConcept(claimItem.concept);
+        if (!concept) return false;
+
+        if (claimItem.qualifier) {
+            const validQualifierObj = typeof claimItem.qualifiers !== 'object'
+                || !Object.entries(claimItem.qualifiers).every(([key, value]) => {
+                    return concept.qualifiers.includes(key) && typeof value === 'string'
+                });
+            if (!validQualifierObj) {
+                return false;
+            }
+        }
+
+        return typeof claimItem === 'object'
             && typeof claimItem.concept === 'string'
             && typeof claimItem.value === 'string'
-            && this.conceptExists(claimItem.concept)
-            && this.validateRelationship(claimItem.relationship);
-    }
-
-    private validateRelationship(relationship: string): boolean {
-        return ['gt', 'gt_or_eq', 'lt', 'lt_or_eq', 'eq', 'not_eq'].includes(relationship.toLowerCase());
-    }
+            && concept.relationships.includes(claimItem.relationship);
+    };
 
     constructor(concepts: Concepts) {
         this.conceptMap = concepts
