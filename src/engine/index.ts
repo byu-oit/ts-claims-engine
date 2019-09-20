@@ -160,7 +160,7 @@ export class ClaimsAdjudicator {
                     return concept.qualifiers.includes(key);
                 });
             if (!validQualifierObj) {
-                return false
+                return false;
             }
         }
 
