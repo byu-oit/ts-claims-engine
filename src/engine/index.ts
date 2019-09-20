@@ -5,13 +5,24 @@ import {
     ClaimsResponse,
     ConceptInfo,
     Concepts,
+    EssentialConcepts,
+    InternalError,
     UnidentifiedSubjectError,
     ValidationError
 } from '../types';
 import {Concept} from './concept';
 
 export class ClaimsAdjudicator {
-    private readonly conceptMap: Concepts;
+    private readonly conceptMap: EssentialConcepts;
+
+    constructor(concepts: Concepts) {
+        const subjectExistsKey = Object.keys(concepts).find((prop, index) => camelCase(prop) === 'subjectExists');
+        if (!subjectExistsKey) {
+            throw new InternalError('Missing required concept `subjectExists` in concepts provided.');
+        }
+        const subjectExists = {subjectExists: concepts[subjectExistsKey]};
+        this.conceptMap = Object.assign(concepts, subjectExists);
+    }
 
     public verifyClaims = async (claims: any): Promise<ClaimsResponse> => {
         if (claims === null || typeof claims !== 'object') {
@@ -22,23 +33,24 @@ export class ClaimsAdjudicator {
             if (!Object.prototype.hasOwnProperty.call(claims, key)) {
                 continue;
             }
-            response[key] = await this.verifyClaim(claims[key]);
+            let value: boolean | InternalError | BadRequest;
+            try {
+                value = await this.verifyClaim(claims[key]);
+            } catch (e) {
+                value = e;
+            }
+            response[key] = value;
         }
         return response;
     };
 
-    public verifyClaim = async (claim: any): Promise<boolean | BadRequest> => {
-        try {
-            this.validateClaim(claim);
-        } catch (e) {
-            return e;
-        }
-
+    public verifyClaim = async (claim: any): Promise<boolean | InternalError | BadRequest> => {
+        await this.validateClaim(claim);
         const {claims, mode, subject} = claim;
         if (['one', 'any'].includes(mode)) {
-            return this.testClaimsAny(subject, claims);
+            return await this.testClaimsAny(subject, claims);
         } else {
-            return this.testClaimsAll(subject, claims);
+            return await this.testClaimsAll(subject, claims);
         }
     };
 
@@ -59,27 +71,33 @@ export class ClaimsAdjudicator {
 
     private testClaim = async (subject: string, claim: ClaimItem): Promise<boolean> => {
         const {compare, cast, getValue} = this.getConcept(claim.concept);
-        switch (claim.relationship.toLowerCase()) {
+
+        const expected = cast(claim.value);
+        if (expected === undefined) {
+            throw new InternalError(`No cast available for ${claim.value}`);
+        }
+
+        const actual = await getValue(subject, claim.qualifier);
+
+        switch (claim.relationship) {
             case 'gt': {
-                return compare.greaterThan(await getValue(subject, claim.qualifier), cast(claim.value));
+                return compare.greaterThan(actual, expected);
             }
             case 'gt_or_eq': {
-                return compare.greaterThanOrEqual(await getValue(subject, claim.qualifier), cast(claim.value));
+                return compare.greaterThanOrEqual(actual, expected);
             }
             case 'lt': {
-                return compare.lessThan(await getValue(subject, claim.qualifier), cast(claim.value));
+                return compare.lessThan(actual, expected);
             }
             case 'lt_or_eq': {
-                return compare.lessThanOrEqual(await getValue(subject, claim.qualifier), cast(claim.value));
+                return compare.lessThanOrEqual(actual, expected);
             }
             case 'eq': {
-                return compare.equal(await getValue(subject, claim.qualifier), cast(claim.value));
+                return compare.equal(actual, expected);
             }
             case 'not_eq': {
-                return compare.notEqual(await getValue(subject, claim.qualifier), cast(claim.value));
+                return compare.notEqual(actual, expected);
             }
-            default:
-                return false; // Unrecognized Relationship
         }
     };
 
@@ -101,18 +119,19 @@ export class ClaimsAdjudicator {
         return false;
     };
 
-    private validateClaim = (claim: any): void => {
+    private validateClaim = async (claim: any): Promise<void> => {
         if (claim === null || typeof claim !== 'object') {
             throw new ValidationError(`Claim must be an non-null object.`);
         }
 
-        // Must have subjectExists concept
-        const concept = Object.keys(this.conceptMap).find(prop => camelCase(prop) === 'subjectExists');
-        const subjectExists = typeof claim.subject === 'string'
-            && concept
-            && this.testClaim(claim.subject, {concept, relationship: 'eq', value: 'true'});
+        // Must have subjectExists concept and dependencies
+        const hasSubject = typeof claim.subject === 'string';
+        if (!hasSubject) {
+            throw new ValidationError('Claim subject must be a string.');
+        }
 
-        if (!subjectExists) { // Quick exit if unidentifiable subject
+        const subjectVerified = await this.testClaim(claim.subject, {concept: 'subjectExists', relationship: 'eq', value: 'true'});
+        if (!subjectVerified) {
             throw new UnidentifiedSubjectError(`Unidentified subject ${claim.subject}.`);
         }
 
@@ -127,21 +146,21 @@ export class ClaimsAdjudicator {
             && claim.claims.every(this.validateClaimItem);
 
         if (!validClaims) {
-            throw new ValidationError(`Invalid claims in ClaimItem ${claim.claims}.`);
+            throw new ValidationError(`Invalid claims in ClaimItems ${JSON.stringify(claim.claims)}.`);
         }
     };
 
     private validateClaimItem = (claimItem: any): boolean => {
         const concept = this.getConcept(claimItem.concept);
-        if (!concept) return false;
+        if (!concept) { return false; }
 
         if (claimItem.qualifier) {
-            const validQualifierObj = typeof claimItem.qualifiers !== 'object'
-                || !Object.entries(claimItem.qualifiers).every(([key, value]) => {
-                    return concept.qualifiers.includes(key) && typeof value === 'string'
+            const validQualifierObj = typeof claimItem.qualifier === 'object'
+                && Object.keys(claimItem.qualifier).every((key) => {
+                    return concept.qualifiers.includes(key);
                 });
             if (!validQualifierObj) {
-                return false;
+                return false
             }
         }
 
@@ -150,8 +169,4 @@ export class ClaimsAdjudicator {
             && typeof claimItem.value === 'string'
             && concept.relationships.includes(claimItem.relationship);
     };
-
-    constructor(concepts: Concepts) {
-        this.conceptMap = concepts
-    }
 }

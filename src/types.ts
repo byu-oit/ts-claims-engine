@@ -1,4 +1,4 @@
-import {Concept} from "./engine/concept";
+import {Concept} from './engine/concept';
 
 export interface ValidationMiddlewareResponse {
     validation_response: { code: number, message: string };
@@ -14,11 +14,11 @@ export interface ClaimMiddlewareResponseBody {
 }
 
 export interface ClaimsResponse {
-    [key: string]: boolean | BadRequest;
+    [key: string]: boolean | InternalError | BadRequest;
 }
 
-export interface Qualifiers {
-    [key: string]: string;
+export interface Qualifiers<> {
+    [key: string]: any;
 }
 
 export type Relationship = 'gt' | 'gt_or_eq' | 'lt' | 'lt_or_eq' | 'eq' | 'not_eq';
@@ -42,6 +42,10 @@ export interface Claims {
 
 export interface Concepts {
     [key: string]: Concept<any>;
+}
+
+export interface EssentialConcepts extends Concepts {
+    subjectExists: Concept<string>;
 }
 
 export interface ConceptInfo {
@@ -68,7 +72,7 @@ export class BadRequest extends Error {
     public errors: string[];
 
     constructor(...errors: string[]) {
-        super('Invalid Claim');
+        super('Bad Request');
         this.errors = errors || [];
         Object.setPrototypeOf(this, BadRequest.prototype);
     }
@@ -85,5 +89,15 @@ export class UnidentifiedSubjectError extends BadRequest {
     constructor(...errors: string[]) {
         super(...errors);
         Object.setPrototypeOf(this, UnidentifiedSubjectError.prototype);
+    }
+}
+
+export class InternalError extends Error {
+    public errors: string[];
+
+    constructor(...errors: string[]) {
+        super('Internal Error');
+        this.errors = errors || [];
+        Object.setPrototypeOf(this, InternalError.prototype);
     }
 }

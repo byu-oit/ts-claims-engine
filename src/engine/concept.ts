@@ -9,22 +9,7 @@ export class Concept<T> {
     public readonly qualifiers: string[];
     public readonly getValue: (subjectId: string, qualifiers?: Qualifiers) => Promise<T>;
     public readonly compare: Comparator<T>;
-    public readonly cast: (value: string) => T | string | number | boolean;
-
-    public defaultCast = (value: string) => {
-        switch (this.type) {
-            case 'string':
-                return value;
-            case 'float':
-                return parseFloat(value);
-            case 'int':
-                return parseInt(value);
-            case 'boolean':
-                return (value.toLowerCase() === 'true') ? true : (value.toLowerCase() === 'false') ? false : value;
-            default:
-                return value;
-        }
-    };
+    public readonly cast: (value: string) => T | string | number | boolean | undefined;
 
     constructor(options: ConceptOptions<T>) {
         this.description = options.description;
@@ -36,4 +21,17 @@ export class Concept<T> {
         this.compare = new Comparator<T>(options.compare);
         this.cast = options.cast || this.defaultCast;
     }
+
+    public defaultCast = (value: string) => {
+        switch (this.type) {
+            case 'string':
+                return value;
+            case 'float':
+                return parseFloat(value);
+            case 'int':
+                return parseInt(value, 10);
+            case 'boolean':
+                return value === 'true';
+        }
+    };
 }
