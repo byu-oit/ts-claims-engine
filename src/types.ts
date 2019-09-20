@@ -1,3 +1,5 @@
+import {Concept} from "./engine/concept";
+
 export interface ValidationMiddlewareResponse {
     validation_response: { code: number, message: string };
 }
@@ -7,7 +9,7 @@ export interface ClaimMiddlewareResponse {
     metadata: ValidationMiddlewareResponse;
 }
 
-export interface ClaimMiddlewareResponses {
+export interface ClaimMiddlewareResponseBody {
     [key: string]: ClaimMiddlewareResponse;
 }
 
@@ -19,9 +21,11 @@ export interface Qualifiers {
     [key: string]: string;
 }
 
+export type Relationship = 'gt' | 'gt_or_eq' | 'lt' | 'lt_or_eq' | 'eq' | 'not_eq';
+
 export interface ClaimItem {
     concept: string;
-    relationship: string;
+    relationship: Relationship;
     value: string;
     qualifier?: Qualifiers;
 }
@@ -36,26 +40,28 @@ export interface Claims {
     [key: string]: Claim;
 }
 
-export interface Concept {
-    description: string;
-    longDescription: string;
-    type: string;
-    range: string;
-    qualifiers: string[];
-    getValue: (subjectId: string, qualifiers?: Qualifiers) => Promise<string | number | boolean>;
-}
-
 export interface Concepts {
-    [key: string]: Concept;
+    [key: string]: Concept<any>;
 }
 
 export interface ConceptInfo {
     id: string;
     description: string;
     longDescription: string;
-    range: string;
     type: string;
-    qualifiers: string[];
+    relationships: Relationship[];
+    qualifiers?: string[];
+}
+
+export interface ConceptOptions<T> {
+    description: string;
+    longDescription: string;
+    type: string;
+    relationships: Relationship[];
+    qualifiers?: string[];
+    getValue: (subjectId: string, qualifiers?: Qualifiers) => Promise<T>;
+    compare?: (a: T, b: T) => number;
+    cast?: (value: string) => T;
 }
 
 export class BadRequest extends Error {

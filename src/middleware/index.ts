@@ -2,7 +2,7 @@ import {NextFunction, Request, Response} from 'express';
 import Enforcer = require('openapi-enforcer-middleware');
 import * as path from 'path';
 import {ClaimsAdjudicator} from '../engine';
-import {UnidentifiedSubjectError, ValidationError} from '../engine/types';
+import {UnidentifiedSubjectError, ValidationError} from '../types';
 
 export function middleware(adjudicator: ClaimsAdjudicator) {
     const enforcer = new Enforcer(path.resolve(__dirname, './swagger.json'));

@@ -6,7 +6,26 @@
   "scripts": {
     "lint": "./node_modules/.bin/tslint -p tsconfig.json -t stylish --fix",
     "build": "./node_modules/.bin/tsc",
-    "test": "./node_modules/.bin/mocha -r ts-node/register ./test/**/*-test.ts"
+    "test": "./node_modules/.bin/nyc ./node_modules/.bin/mocha"
+  },
+  "nyc": {
+    "include": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+    ],
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "require": [
+      "ts-node/register"
+    ],
+    "reporter": [
+      "text-summary",
+      "html"
+    ],
+    "sourceMap": true,
+    "instrument": true
   },
   "repository": {
     "type": "git",
@@ -24,6 +43,8 @@
     "@types/node": "^12.7.3",
     "chai": "^4.2.0",
     "mocha": "^6.2.0",
+    "nyc": "^14.1.1",
+    "source-map-support": "^0.5.13",
     "ts-node": "^8.3.0",
     "tslint": "^5.19.0",
     "typescript": "^3.6.2"

@@ -3,14 +3,15 @@ import {
     BadRequest,
     ClaimItem,
     ClaimsResponse,
-    Concept, ConceptInfo,
+    ConceptInfo,
     Concepts,
     UnidentifiedSubjectError,
     ValidationError
-} from './types';
+} from '../types';
+import {Concept} from './concept';
 
-export abstract class ClaimsAdjudicator {
-    public abstract conceptMap: Concepts;
+export class ClaimsAdjudicator {
+    private readonly conceptMap: Concepts;
 
     public async verifyClaims(claims: any): Promise<ClaimsResponse> {
         if (claims !== null || typeof claims !== 'object') {
@@ -45,40 +46,41 @@ export abstract class ClaimsAdjudicator {
         return Object.prototype.hasOwnProperty.call(this.conceptMap, key);
     }
 
-    public getConcept(key: string): Concept {
+    public getConcept(key: string): Concept<any> {
         return this.conceptMap[key];
     }
 
     public getConcepts = (): ConceptInfo[] => {
         return Object.entries(this.conceptMap)
-            .map(([id, {description, longDescription, range, type, qualifiers}]) => {
-                return {id, description, longDescription, range, type, qualifiers};
+            .map(([id, {description, longDescription, type, relationships, qualifiers}]) => {
+                return {id, description, longDescription, type, relationships, qualifiers};
             });
     };
 
     private async testClaim(subject: string, claim: ClaimItem): Promise<boolean> {
-        const concept = this.getConcept(claim.concept);
+        const {compare, cast, getValue} = this.getConcept(claim.concept);
         switch (claim.relationship.toLowerCase()) {
             case 'gt': {
-                return await concept.getValue(subject, claim.qualifier) > this.toConceptType(concept.type, claim.value);
+                return compare.greaterThan(await getValue(subject, claim.qualifier), cast(claim.value));
             }
             case 'gt_or_eq': {
-                return await concept.getValue(subject, claim.qualifier) >= this.toConceptType(concept.type, claim.value);
+                return compare.greaterThanOrEqual(await getValue(subject, claim.qualifier), cast(claim.value));
             }
             case 'lt': {
-                return await concept.getValue(subject, claim.qualifier) < this.toConceptType(concept.type, claim.value);
+                return compare.lessThan(await getValue(subject, claim.qualifier), cast(claim.value));
             }
             case 'lt_or_eq': {
-                return await concept.getValue(subject, claim.qualifier) <= this.toConceptType(concept.type, claim.value);
+                return compare.lessThanOrEqual(await getValue(subject, claim.qualifier), cast(claim.value));
             }
             case 'eq': {
-                return await concept.getValue(subject, claim.qualifier) === this.toConceptType(concept.type, claim.value);
+                return compare.equal(await getValue(subject, claim.qualifier), cast(claim.value));
             }
             case 'not_eq': {
-                return await concept.getValue(subject, claim.qualifier) !== this.toConceptType(concept.type, claim.value);
+                return compare.notEqual(await getValue(subject, claim.qualifier), cast(claim.value));
             }
+            default:
+                return false; // Unrecognized Relationship
         }
-        return false; // Unrecognized Relationship
     }
 
     private async testClaimsAll(subject: string, claims: ClaimItem[]): Promise<boolean> {
@@ -142,38 +144,7 @@ export abstract class ClaimsAdjudicator {
         return ['gt', 'gt_or_eq', 'lt', 'lt_or_eq', 'eq', 'not_eq'].includes(relationship.toLowerCase());
     }
 
-    private toConceptType(conceptType: string, claimValue: string | number | boolean): string | number | boolean {
-        switch (conceptType) {
-            case 'boolean': {
-                if (typeof claimValue === 'string') {
-                    return (claimValue.toLowerCase() === 'true') ? true : (claimValue.toLowerCase() === 'false') ? false : claimValue;
-                } else if (typeof claimValue === 'number') {
-                    return !!claimValue;
-                } else {
-                    return claimValue;
-                }
-            }
-            case 'float': {
-                if (typeof claimValue === 'string') {
-                    return parseFloat(claimValue);
-                } else if (typeof claimValue === 'boolean') {
-                    return claimValue ? 1 : 0;
-                } else {
-                    return claimValue;
-                }
-            }
-            case 'int': {
-                if (typeof claimValue === 'string') {
-                    return parseInt(claimValue, 10);
-                } else if (typeof claimValue === 'boolean') {
-                    return claimValue ? 1 : 0;
-                } else {
-                    return claimValue;
-                }
-            }
-            default: {
-                return claimValue;
-            }
-        }
+    constructor(concepts: Concepts) {
+        this.conceptMap = concepts
     }
 }
