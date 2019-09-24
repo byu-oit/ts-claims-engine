@@ -1,5 +1,5 @@
-import {BadRequest, InternalError} from './error';
 import {Concept} from './concept';
+import {BadRequest, InternalError} from './error';
 
 export interface ClaimsResponse {
     [key: string]: boolean | InternalError | BadRequest;

@@ -15,9 +15,9 @@ export class Comparator<T> {
             try {
                 return fn ? fn(left, right) : Comparator.defaultCompareFunction(left, right);
             } catch (e) {
-                throw new Error(`Error in the compare function: ${e.message}.`)
+                throw new Error(`Error in the compare function: ${e.message}.`);
             }
-        }
+        };
     }
 
     public equal(a: T, b: T) {

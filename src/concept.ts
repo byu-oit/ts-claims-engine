@@ -1,5 +1,5 @@
-import {ConceptOptions, GetValueFunction, Relationship} from './types';
 import {Comparator} from './comparator';
+import {ConceptOptions, GetValueFunction, Relationship} from './types';
 
 export class Concept<T> {
     public readonly description: string;
@@ -35,7 +35,7 @@ export class Concept<T> {
             } catch (e) {
                 throw new Error(`Error during casting: ${e.message}.`);
             }
-        }
+        };
     }
 
     public defaultCast = (value: string) => {
