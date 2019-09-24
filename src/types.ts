@@ -1,17 +1,5 @@
-import {Concept} from './engine/concept';
-
-export interface ValidationMiddlewareResponse {
-    validation_response: { code: number, message: string };
-}
-
-export interface ClaimMiddlewareResponse {
-    verified?: boolean;
-    metadata: ValidationMiddlewareResponse;
-}
-
-export interface ClaimMiddlewareResponseBody {
-    [key: string]: ClaimMiddlewareResponse;
-}
+import {BadRequest, InternalError} from './error';
+import {Concept} from './concept';
 
 export interface ClaimsResponse {
     [key: string]: boolean | InternalError | BadRequest;
@@ -68,36 +56,6 @@ export interface ConceptOptions<T> {
     cast?: (value: string) => T;
 }
 
-export class BadRequest extends Error {
-    public errors: string[];
+export type GetValueFunction<T> = (subjectId: string, qualifiers?: Qualifiers) => Promise<T>;
 
-    constructor(...errors: string[]) {
-        super('Bad Request');
-        this.errors = errors || [];
-        Object.setPrototypeOf(this, BadRequest.prototype);
-    }
-}
-
-export class ValidationError extends BadRequest {
-    constructor(...errors: string[]) {
-        super(...errors);
-        Object.setPrototypeOf(this, ValidationError.prototype);
-    }
-}
-
-export class UnidentifiedSubjectError extends BadRequest {
-    constructor(...errors: string[]) {
-        super(...errors);
-        Object.setPrototypeOf(this, UnidentifiedSubjectError.prototype);
-    }
-}
-
-export class InternalError extends Error {
-    public errors: string[];
-
-    constructor(...errors: string[]) {
-        super('Internal Error');
-        this.errors = errors || [];
-        Object.setPrototypeOf(this, InternalError.prototype);
-    }
-}
+export type NumberCompareFn<T> = (left: T, right: T) => number;

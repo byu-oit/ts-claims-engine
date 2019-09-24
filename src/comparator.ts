@@ -1,15 +1,23 @@
-export default class Comparator<T> {
-    public static defaultCompareFunction(a: any, b: any) {
-        if (a === b) {
+import {NumberCompareFn} from './types';
+
+export class Comparator<T> {
+    public static defaultCompareFunction(left: any, right: any) {
+        if (left === right) {
             return 0;
         }
-        return a < b ? -1 : 1;
+        return left < right ? -1 : 1;
     }
 
-    public compare: (a: T, b: T) => number;
+    public compare: NumberCompareFn<T>;
 
-    constructor(fn?: (a: T, b: T) => number) {
-        this.compare = fn || Comparator.defaultCompareFunction;
+    constructor(fn?: NumberCompareFn<T>) {
+        this.compare = (left, right) => {
+            try {
+                return fn ? fn(left, right) : Comparator.defaultCompareFunction(left, right);
+            } catch (e) {
+                throw new Error(`Error in the compare function: ${e.message}.`)
+            }
+        }
     }
 
     public equal(a: T, b: T) {

@@ -1,24 +1,15 @@
 import {camelCase} from 'change-case';
-import {
-    BadRequest,
-    ClaimItem,
-    ClaimsResponse,
-    ConceptInfo,
-    Concepts,
-    EssentialConcepts,
-    InternalError,
-    UnidentifiedSubjectError,
-    ValidationError
-} from '../types';
-import {Concept} from './concept';
+import {ClaimItem, ClaimsResponse, ConceptInfo, Concepts, EssentialConcepts,} from './types';
+import {BadRequest, InternalError, UnidentifiedSubjectError, ValidationError} from './error';
+import {Concept} from './concept'
 
 export class ClaimsAdjudicator {
     private readonly conceptMap: EssentialConcepts;
 
     constructor(concepts: Concepts) {
-        const subjectExistsKey = Object.keys(concepts).find((prop, index) => camelCase(prop) === 'subjectExists');
+        const subjectExistsKey = Object.keys(concepts).find((prop) => camelCase(prop) === 'subjectExists');
         if (!subjectExistsKey) {
-            throw new InternalError('Missing required concept `subjectExists` in concepts provided.');
+            throw new Error('Missing required concept `subjectExists` in concepts provided.');
         }
         const subjectExists = {subjectExists: concepts[subjectExistsKey]};
         this.conceptMap = Object.assign(concepts, subjectExists);
@@ -72,32 +63,38 @@ export class ClaimsAdjudicator {
     private testClaim = async (subject: string, claim: ClaimItem): Promise<boolean> => {
         const {compare, cast, getValue} = this.getConcept(claim.concept);
 
-        const expected = cast(claim.value);
-        if (expected === undefined) {
-            throw new InternalError(`No cast available for ${claim.value}`);
-        }
+        let expected;
+        let actual;
 
-        const actual = await getValue(subject, claim.qualifier);
+        try {
+            expected = cast(claim.value);
+            actual = await getValue(subject, claim.qualifier);
 
-        switch (claim.relationship) {
-            case 'gt': {
-                return compare.greaterThan(actual, expected);
+            switch (claim.relationship) {
+                case 'gt': {
+                    return compare.greaterThan(actual, expected);
+                }
+                case 'gt_or_eq': {
+                    return compare.greaterThanOrEqual(actual, expected);
+                }
+                case 'lt': {
+                    return compare.lessThan(actual, expected);
+                }
+                case 'lt_or_eq': {
+                    return compare.lessThanOrEqual(actual, expected);
+                }
+                case 'eq': {
+                    return compare.equal(actual, expected);
+                }
+                case 'not_eq': {
+                    return compare.notEqual(actual, expected);
+                }
+                default: {
+                    throw new Error(`Unknown relationship '${claim.relationship}' in claim.`)
+                }
             }
-            case 'gt_or_eq': {
-                return compare.greaterThanOrEqual(actual, expected);
-            }
-            case 'lt': {
-                return compare.lessThan(actual, expected);
-            }
-            case 'lt_or_eq': {
-                return compare.lessThanOrEqual(actual, expected);
-            }
-            case 'eq': {
-                return compare.equal(actual, expected);
-            }
-            case 'not_eq': {
-                return compare.notEqual(actual, expected);
-            }
+        } catch (e) {
+            throw new InternalError(e.message);
         }
     };
 
@@ -130,7 +127,11 @@ export class ClaimsAdjudicator {
             throw new ValidationError('Claim subject must be a string.');
         }
 
-        const subjectVerified = await this.testClaim(claim.subject, {concept: 'subjectExists', relationship: 'eq', value: 'true'});
+        const subjectVerified = await this.testClaim(claim.subject, {
+            concept: 'subjectExists',
+            relationship: 'eq',
+            value: 'true'
+        });
         if (!subjectVerified) {
             throw new UnidentifiedSubjectError(`Unidentified subject ${claim.subject}.`);
         }
@@ -152,7 +153,9 @@ export class ClaimsAdjudicator {
 
     private validateClaimItem = (claimItem: any): boolean => {
         const concept = this.getConcept(claimItem.concept);
-        if (!concept) { return false; }
+        if (!concept) {
+            return false;
+        }
 
         if (claimItem.qualifier) {
             const validQualifierObj = typeof claimItem.qualifier === 'object'
