@@ -17,7 +17,7 @@
     "outDir": "dist"
   },
   "include": [
-    "src/**/*"
+    "lib/**/*"
   ],
   "compileOnSave": false
 }

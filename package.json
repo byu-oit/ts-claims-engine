@@ -1,13 +1,13 @@
 {
   "name": "@byu-oit/ts-claims-engine",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Claims engine implementation in TypeScript",
   "main": "dist/index.js",
   "scripts": {
-    "lint": "./node_modules/.bin/tslint -p tsconfig.json -t stylish --fix",
-    "build": "./node_modules/.bin/tsc",
-    "test": "./node_modules/.bin/mocha -r ts-node/register ./test/**/*-test.ts",
-    "coverage": "./node_modules/.bin/nyc ./node_modules/.bin/mocha"
+    "lint": "tslint -p tsconfig.json -t stylish --fix",
+    "build": "tsc",
+    "test": "mocha -r ts-node/register ./test/**/*-test.ts",
+    "coverage": "nyc ./node_modules/.bin/mocha"
   },
   "nyc": {
     "include": [
@@ -55,5 +55,15 @@
   },
   "dependencies": {
     "change-case": "^3.1.0"
-  }
+  },
+  "directories": {
+    "test": "test",
+    "lib": "lib"
+  },
+  "keywords": [
+    "typescript",
+    "claims",
+    "adjudicator",
+    "engine"
+  ]
 }
