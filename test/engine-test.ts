@@ -1,7 +1,7 @@
 import {assert} from 'chai';
 import * as _ from 'lodash';
-import {BadRequest, InternalError, UnidentifiedSubjectError} from '../lib/error';
-import {ClaimsAdjudicator} from '../lib/engine'
+import {BadRequest, InternalError, UnidentifiedSubjectError} from '../lib';
+import {ClaimsAdjudicator} from '../lib'
 import {testClaims, testConcepts} from './static';
 
 describe('Claims Adjudicator', () => {
