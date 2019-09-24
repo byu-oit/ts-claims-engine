@@ -1,4 +1,4 @@
-import {Concept} from '../src/concept';
+import {Concept} from '../lib/concept';
 
 class Food {
     public name: string;
