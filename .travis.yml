@@ -6,3 +6,5 @@ node_js:
   - 10
   - 9
   - 8
+after_install: 'npm run build'
+after_success: 'npm run coverage'
