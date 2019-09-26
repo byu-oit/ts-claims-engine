@@ -11,6 +11,8 @@ export interface Qualifiers<> {
 
 export type Relationship = 'gt' | 'gt_or_eq' | 'lt' | 'lt_or_eq' | 'eq' | 'not_eq';
 
+export type Mode = 'all' | 'any' | 'one';
+
 export interface ClaimItem {
     concept: string;
     relationship: Relationship;
@@ -20,7 +22,7 @@ export interface ClaimItem {
 
 export interface Claim {
     subject: string;
-    mode: 'all' | 'any' | 'one';
+    mode: Mode;
     claims: ClaimItem[];
 }
 
