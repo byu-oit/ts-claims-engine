@@ -80,16 +80,16 @@ Creates a new instance of the ClaimsAdjudicator
 ```ts
 ClaimsAdjudicator(concepts: Concepts)
 ```
-!IMPORTANT! One of the concepts must be the subjectExists concept. For example:
-```ts
-{
+**IMPORTANT** One of the concepts must be the `subjectExists` concept. The `subjectExists` property can be in [any case](https://github.com/blakeembrey/change-case). However, if the key is not in `camelCase`, a copy will be added to the concepts with the key in `camelCase`. For example:
+```js
+const concepts = {
     subject_exists: new Concept({
         description: 'The subject exists',
         longDescription: 'Determines whether a subject is a known entity within the domain.',
         type: 'boolean',
         relationships: ['eq', 'not_eq'],
         qualifiers: ['age'],
-        getValue: async (id: string, qualifiers) => {
+        getValue: async (id, qualifiers) => {
             if (qualifiers && qualifiers.age) {
                 return subjects[id] !== undefined && subjects[id].age === qualifiers.age
             } else {
@@ -98,6 +98,41 @@ ClaimsAdjudicator(concepts: Concepts)
         }
     })
 }
+
+;(async () => {
+    const engine = new ClaimsAdjudicator(concepts)
+    const conceptInfo = await engine.getConcepts()
+    console.log(JSON.stringify(conceptInfo, null, 2))
+    
+      //[
+      //   {
+      //     "id": "subject_exists",
+      //     "description": "The subject exists",
+      //     "longDescription": "Determines whether a subject is a known entity within the domain.",
+      //     "type": "boolean",
+      //     "relationships": [
+      //       "eq",
+      //       "not_eq"
+      //     ],
+      //     "qualifiers": [
+      //       "age"
+      //     ]
+      //   },
+      //   {
+      //     "id": "subjectExists",
+      //     "description": "The subject exists",
+      //     "longDescription": "Determines whether a subject is a known entity within the domain.",
+      //     "type": "boolean",
+      //     "relationships": [
+      //       "eq",
+      //       "not_eq"
+      //     ],
+      //     "qualifiers": [
+      //       "age"
+      //     ]
+      //   }
+      // ]
+})()
 ```
 
 ### Public Methods
