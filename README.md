@@ -17,7 +17,7 @@ a person is older than 21, many systems store that person's birth date. The CAM
 enables domains to store the binary answer to the questions, "Is this person older
 than 21?", instead of the more problematic date of birth.
 
-## Terminology
+### Terminology
 
 * **Claim** - A subject identifier and one or more tuples defining the relationship of the value of a concept associated with the subject and a reference value
 * **Concept** - A domain-specific value or state about which a claim may be validated. A concept can be anything from a single internal data element to the result of a complex internal process. That is, concepts can be more abstract than the properties associated with a domain's resources and subresources.
@@ -26,7 +26,7 @@ than 21?", instead of the more problematic date of birth.
 * **Relationship** - The claimed relationship between the value of the concept for the specified subject and the reference value. Relationships include "match," "gt_or_eq-to," and "lt_or_eq-to."
 * **Subject** - A domain-specific resource identifier.
 
-## Description
+### Description
 
 More formally, the CAM determines whether a claimed relationship between the value
 of the instance of a concept and a reference value can be verified.
@@ -56,7 +56,7 @@ dynamically determined by a function.
 In the older-than-21 example, the domain might subtract the birth date of the
 subject from the current date to derive an age to compare with the reference value.
 
-### Qualifier
+#### Qualifier
 
 The claim tuple in the example above omitted the optional **qualifier** property.
 A qualifier is an object with domain-specific properties. It is passed, along with
@@ -71,3 +71,96 @@ the subject ID to the concept resolution code to further qualify the claim.
 
 In this example, the ageMonthOffset qualifier asks if the person will be older
 than 21 in 5 months.
+
+## API
+Some of the parameters and return types are complex objects. Instead of defining them in the method definitions, they have been defined in the [types file](lib/types.ts). Some of the more important types are defined in the [Appendix](#appendix) under [API Reference](#api-reference).
+
+### ClaimsAdjudicator
+Creates a new instance of the ClaimsAdjudicator
+```ts
+ClaimsAdjudicator(concepts: Concepts)
+```
+!IMPORTANT! One of the concepts must be the subjectExists concept. For example:
+```ts
+{
+    subject_exists: new Concept({
+        description: 'The subject exists',
+        longDescription: 'Determines whether a subject is a known entity within the domain.',
+        type: 'boolean',
+        relationships: ['eq', 'not_eq'],
+        qualifiers: ['age'],
+        getValue: async (id: string, qualifiers) => {
+            if (qualifiers && qualifiers.age) {
+                return subjects[id] !== undefined && subjects[id].age === qualifiers.age
+            } else {
+                return subjects[id] !== undefined
+            }
+        }
+    })
+}
+```
+
+### Public Methods
+`verifyClaims`: Verifies the claims body against the the concept configuration.
+```ts
+verifyClaims(claims: any): Promise<ClaimsResponse>
+```
+The claims parameter will accept any type in the function though it will throw a BadRequest Error if the structure of the claims cannot be interpreted. The correct structure is defined in the [Appendix](#appendix) under [API Reference](#api-reference).
+
+`verifyClaim`: Verifies a single claim against the concept configuration.
+```ts
+verifyClaim(claim: any): Promise<boolean | InternalError | BadRequest>
+```
+The claim parameter will accept any type in the function though it will throw a BadRequest Error if the str
+
+`conceptExists`: Verifies that a concept has been defined.
+```ts
+conceptExists(key: string): boolean
+```
+
+`getConcepts`: Retrieves only the concepts definition information. It does not retrieve the getValue function.
+```ts
+getConcepts(): ConceptInfo[]
+```
+
+`getConcept`: Retrieves a particular concept including the getValue function.
+```ts
+getConcept(key: string): Concept<any>
+```
+
+
+## Appendix
+
+### API Reference
+```ts
+interface Claims {
+	[key: string]: Claim
+}
+
+interface Claim {
+	subject: string;
+	mode: Mode;
+	claims: Claims;
+}
+
+interface ClaimItem {
+    concept: string;
+    relationship: Relationship;
+    value: string;
+    qualifier?: Qualifiers;
+}
+
+interface Qualifiers<> {
+    [key: string]: any;
+}
+
+type Relationship = 'gt' | 'gt_or_eq' | 'lt' | 'lt_or_eq' | 'eq' | 'not_eq';
+
+type Mode = 'all' | 'any' | 'one';
+```
+
+### Related Packages
+* **[Claims Adjudicator Module (CAM)](https://github.com/byu-oit/ts-claims-engine)**
+* **[Claims Adjudicator Middleware](https://github.com/byu-oit/ts-claims-engine-middleware)**
+* **[Claims Adjudicator Client](https://github.com/byu-oit/ts-claims-engine-client)**
+* **[Claims Adjudicator WSO2 Request](https://github.com/byu-oit/ts-wso2-claims-request)**
