@@ -1,32 +1,36 @@
-import {Concept} from '../lib';
+import {Claims, Concept, Modes, Relationships} from '../lib'
 
 class Food {
-    public name: string;
+    public name: string
 
     constructor(name: string) {
-        this.name = name;
+        this.name = name
     }
 }
 
 class Sex {
-    public value: string;
+    public value: string
 
-    constructor(value: 'm' | 'f') {
-        this.value = value;
+    constructor(value: string) {
+        value = value.toLowerCase()
+        if (!['m', 'f'].includes(value)) throw new TypeError(`Invalid sex ${value}`)
+        this.value = value
     }
 }
 
 export const subjects: {
     [key: string]: {
-        age: number;
-        birth_date: string;
-        height: number;
-        favorite_color: string;
-        favorite_food: Food;
-        sex: Sex;
+        name: string
+        age: number
+        birth_date: string
+        height: number
+        favorite_color: string
+        favorite_food: Food
+        sex: Sex
     }
 } = {
     '123456789': {
+        name: 'Joe',
         age: 23,
         birth_date: '1995-10-23',
         height: 5.5,
@@ -35,6 +39,7 @@ export const subjects: {
         sex: new Sex('f')
     },
     '987654321': {
+        name: 'Bill',
         age: 16,
         birth_date: '2000-07-11',
         height: 6.1,
@@ -43,6 +48,7 @@ export const subjects: {
         sex: new Sex('m')
     },
     '123456987': {
+        name: 'Lacey',
         age: 25,
         birth_date: '1993-09-10',
         height: 5.8,
@@ -50,14 +56,14 @@ export const subjects: {
         favorite_food: new Food('ice cream'),
         sex: new Sex('f')
     }
-};
+}
 
-export const testConcepts = {
-    subject_exists: new Concept({
+export const testConcepts = [
+    Concept.Boolean({
+        name: 'subject_exists',
         description: 'The subject exists',
         longDescription: 'Determines whether a subject is a known entity within the domain.',
-        type: 'boolean',
-        relationships: ['eq', 'not_eq'],
+        relationships: [Relationships.EQ, Relationships.NE],
         qualifiers: ['age'],
         getValue: async (id: string, qualifiers) => {
             if (qualifiers && qualifiers.age) {
@@ -67,349 +73,330 @@ export const testConcepts = {
             }
         }
     }),
-    age: new Concept({
+    Concept.Number({
+        name: 'age',
         description: 'The subject is of age',
         longDescription: 'Determine if the subject is of an age',
-        type: 'int',
-        relationships: ['gt', 'gt_or_eq', 'lt', 'lt_or_eq', 'eq', 'not_eq'],
+        relationships: [Relationships.GT, Relationships.GTE, Relationships.LT, Relationships.LTE, Relationships.EQ, Relationships.NE],
         getValue: async (id: string) => subjects[id].age
     }),
-    height: new Concept({
+    Concept.Number({
+        name: 'height',
         description: 'The subject\'s height',
         longDescription: 'The subject\'s measured height in feet',
-        type: 'float',
-        relationships: ['gt', 'gt_or_eq', 'lt', 'lt_or_eq', 'eq', 'not_eq'],
+        relationships: [Relationships.GT, Relationships.GTE, Relationships.LT, Relationships.LTE, Relationships.EQ, Relationships.NE],
         getValue: async (id: string) => subjects[id].height
     }),
-    favorite_color: new Concept({
+    Concept.String({
+        name: 'favorite_color',
         description: 'The subject has the favorite color',
         longDescription: 'The subject considers their favorite color to be',
-        type: 'string',
-        relationships: ['gt', 'gt_or_eq', 'lt', 'lt_or_eq', 'eq', 'not_eq'],
+        relationships: [Relationships.GT, Relationships.GTE, Relationships.LT, Relationships.LTE, Relationships.EQ, Relationships.NE],
         getValue: async (id: string) => subjects[id].favorite_color,
         compare: (a, b) => {
-            const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
-            return colors.indexOf(b) - colors.indexOf(a);
-        },
+            const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
+            return colors.indexOf(b) - colors.indexOf(a)
+        }
     }),
-    favorite_food: new Concept({
+    Concept.String({
+        name: 'name',
+        description: 'The subject has the name',
+        longDescription: 'The subjects has the name',
+        relationships: [Relationships.GT, Relationships.GTE, Relationships.LT, Relationships.LTE, Relationships.EQ, Relationships.NE],
+        getValue: async (id: string) => subjects[id].name
+    }),
+    Concept.Custom<Food>({
+        name: 'favorite_food',
         description: 'The subject has the favorite food',
         longDescription: 'The subject considers their favorite food to be',
-        type: 'food', // Some Generic Type
-        relationships: ['eq', 'not_eq'],
+        relationships: [Relationships.EQ, Relationships.NE],
         getValue: async (id: string) => subjects[id].favorite_food,
-        compare: (a: Food, b: Food) => {
-            const colors = ['pizza', 'ice cream', 'salad'];
-            return colors.indexOf(b.name) - colors.indexOf(a.name);
+        compare: (a, b) => {
+            const colors = ['pizza', 'ice cream', 'salad']
+            return colors.indexOf(b.name) - colors.indexOf(a.name)
         },
         cast: value => new Food(value)
     }),
-    sex: new Concept({
+    Concept.Custom<Sex>({
+        name: 'sex',
         description: 'The subject is of the sex',
         longDescription: 'The subject is biologically considered',
-        type: 'sex', // Some Generic Type
-        relationships: ['eq', 'not_eq'],
-        getValue: async (id: string) => subjects[id].sex,
-        compare: (a: Sex, b: Sex) => {
-            return 0;
-        },
+        relationships: [Relationships.EQ, Relationships.NE],
+        async getValue (id: string) { return subjects[id].sex },
+        compare () { return 0 },
+        cast (value) { return new Sex(value) }
     }),
-    bad_compare_favorite_color: new Concept({
+    Concept.String({
+        name: 'bad_compare_favorite_color',
         description: 'The subject has the favorite color',
         longDescription: 'The subject considers their favorite color to be',
-        type: 'string',
-        relationships: ['eq', 'not_eq'],
-        getValue: async (id: string) => subjects[id].favorite_color,
-        compare: (a, b) => {
-            throw new Error('Fake Error');
-        },
+        relationships: [Relationships.EQ, Relationships.NE],
+        async getValue () { return '' },
+        compare () { throw new Error('Fake Error') },
     }),
-    bad_cast_favorite_color: new Concept({
+    Concept.String({
+        name: 'bad_cast_favorite_color',
         description: 'The subject has the favorite color',
         longDescription: 'The subject considers their favorite color to be',
-        type: 'color',
-        relationships: ['eq', 'not_eq'],
+        relationships: [Relationships.EQ, Relationships.NE],
         getValue: async (id: string) => subjects[id].favorite_color,
-        cast: (value) => {
-            throw new Error('Fake Error');
-        },
+        cast () { throw new Error('Fake Error') }
     })
-};
+]
 
-export const testClaims = {
+export const testClaims: Claims = {
     t1: {
-        'subject': '123456789',
-        'claims': [
+        subject: '123456789',
+        claims: [
             {
-                'concept': 'favorite_color',
-                'relationship': 'eq',
-                'value': 'blue'
+                concept: 'favorite_color',
+                relationship: Relationships.EQ,
+                value: 'blue'
             }
         ]
     },
     t2: {
-        'subject': '123456789',
-        'claims': [
+        subject: '123456789',
+        claims: [
             {
-                'concept': 'favorite_color',
-                'relationship': 'not_eq',
-                'value': 'orange'
+                concept: 'favorite_color',
+                relationship: Relationships.NE,
+                value: 'orange'
             }
         ]
     },
     t3: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'age',
-                'relationship': 'gt',
-                'value': '15'
+                concept: 'age',
+                relationship: Relationships.GT,
+                value: '15'
             }
         ]
     },
     t4: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'age',
-                'relationship': 'gt_or_eq',
-                'value': '16'
+                concept: 'age',
+                relationship: Relationships.GTE,
+                value: '16'
             }
         ]
     },
     t5: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'height',
-                'relationship': 'lt_or_eq',
-                'value': '6.1'
+                concept: 'height',
+                relationship: Relationships.LTE,
+                value: '6.1'
             }
         ]
     },
     t6: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'height',
-                'relationship': 'lt',
-                'value': '6.2'
+                concept: 'height',
+                relationship: Relationships.LT,
+                value: '6.2'
             }
         ]
     },
     t7: {
-        'subject': '123456987',
-        'mode': 'any',
-        'claims': [
+        subject: '123456987',
+        mode: Modes.ANY,
+        claims: [
             {
-                'concept': 'favorite_food',
-                'relationship': 'eq',
-                'value': 'ice cream'
+                concept: 'favorite_food',
+                relationship: Relationships.EQ,
+                value: 'ice cream'
             }
         ]
     },
     t8: {
-        'subject': '123456987',
-        'mode': 'any',
-        'claims': [
+        subject: '123456987',
+        mode: Modes.ANY,
+        claims: [
             {
-                'concept': 'subject_exists',
-                'relationship': 'eq',
-                'qualifier': {
+                concept: 'subject_exists',
+                relationship: Relationships.EQ,
+                qualifier: {
                     'age': 25
                 },
-                'value': 'true'
+                value: 'true'
+            }
+        ]
+    },
+    t9: {
+        subject: '123456987',
+        mode: Modes.ALL,
+        claims: [
+            {
+                concept: 'name',
+                relationship: Relationships.GT,
+                value: 'Alpha'
+            },
+            {
+                concept: 'name',
+                relationship: Relationships.LT,
+                value: 'Omega'
             }
         ]
     },
 
     f1: {
-        'subject': '123456789',
-        'claims': [
+        subject: '123456789',
+        claims: [
             {
-                'concept': 'favorite_color',
-                'relationship': 'eq',
-                'value': 'orange'
+                concept: 'favorite_color',
+                relationship: Relationships.EQ,
+                value: 'orange'
             }
         ]
     },
     f2: {
-        'subject': '123456789',
-        'claims': [
+        subject: '123456789',
+        claims: [
             {
-                'concept': 'favorite_color',
-                'relationship': 'not_eq',
-                'value': 'blue'
+                concept: 'favorite_color',
+                relationship: Relationships.NE,
+                value: 'blue'
             }
         ]
     },
     f3: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'age',
-                'relationship': 'gt',
-                'value': '16'
+                concept: 'age',
+                relationship: Relationships.GT,
+                value: '16'
             }
         ]
     },
     f4: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'age',
-                'relationship': 'gt_or_eq',
-                'value': '17'
+                concept: 'age',
+                relationship: Relationships.GTE,
+                value: '17'
             }
         ]
     },
     f5: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'age',
-                'relationship': 'lt_or_eq',
-                'value': '15'
+                concept: 'age',
+                relationship: Relationships.LTE,
+                value: '15'
             }
         ]
     },
     f6: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'age',
-                'relationship': 'lt',
-                'value': '16'
+                concept: 'age',
+                relationship: Relationships.LT,
+                value: '16'
             }
         ]
     },
     f7: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'subject_exists',
-                'relationship': 'eq',
-                'value': 'false'
+                concept: 'subject_exists',
+                relationship: Relationships.EQ,
+                value: 'false'
             }
         ]
     },
     f8: {
-        'subject': '123456987',
-        'mode': 'any',
-        'claims': [
+        subject: '123456987',
+        mode: Modes.ANY,
+        claims: [
             {
-                'concept': 'favorite_color',
-                'relationship': 'lt',
-                'value': 'red'
+                concept: 'favorite_color',
+                relationship: Relationships.LT,
+                value: 'red'
+            }
+        ]
+    },
+    f9: {
+        subject: '123456987',
+        mode: Modes.ALL,
+        claims: [
+            {
+                concept: 'name',
+                relationship: Relationships.GT,
+                value: 'Omega'
+            },
+            {
+                concept: 'name',
+                relationship: Relationships.LT,
+                value: 'Alpha'
             }
         ]
     },
 
     e_unidentified_subject: {
-        'subject': 'Not a subject',
-        'claims': [
+        subject: 'Not a subject',
+        claims: [
             {
-                'concept': 'favorite_color',
-                'relationship': 'eq',
-                'value': 'blue'
+                concept: 'favorite_color',
+                relationship: Relationships.EQ,
+                value: 'blue'
             }
-        ]
-    },
-    e_bad_request_invalid_claim_object: 'Not a valid claim object',
-    e_bad_request_invalid_claim_item: {
-        'subject': '987654321',
-        'claims': [
-            'Not a valid claim item'
         ]
     },
     e_bad_request_undefined_relationship: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'favorite_food',
-                'relationship': 'gt_or_eq', // Relationship not specified in concept
-                'value': 'pizza'
-            }
-        ]
-    },
-    e_bad_request_invalid_mode: {
-        'subject': '987654321',
-        'mode': 'Not a valid mode',
-        'claims': [
-            {
-                'concept': 'age',
-                'relationship': 'eq',
-                'value': '16'
-            }
-        ]
-    },
-    e_bad_request_invalid_claim_array: {
-        'subject': '987654321',
-        'claims': 'Not a valid claim array'
-    },
-    e_bad_request_invalid_relationship: {
-        'subject': '987654321',
-        'claims': [
-            {
-                'concept': 'favorite_color',
-                'relationship': '===', // Relationship not specified in concept
-                'value': 'blue'
-            }
-        ]
-    },
-    e_bad_request_invalid_subject: {
-        'subject': 987654321, // Subject must be a string
-        'claims': [
-            {
-                'concept': 'favorite_food',
-                'relationship': 'eq',
-                'value': 'pizza'
-            }
-        ]
-    },
-    e_bad_request_invalid_qualifier_type: {
-        'subject': '987654321',
-        'claims': [
-            {
-                'concept': 'subject_exists',
-                'relationship': 'eq',
-                'qualifier': 'Qualifiers must be an object with key-value pairs',
-                'value': 'true'
+                concept: 'favorite_food',
+                relationship: Relationships.GTE, // Relationship not specified in concept
+                value: 'pizza'
             }
         ]
     },
     e_bad_request_undefined_qualifier: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'subject_exists',
-                'relationship': 'eq',
-                'qualifier': {
-                    'height': 6.1
+                concept: 'subject_exists',
+                relationship: Relationships.EQ,
+                qualifier: {
+                    height: 6.1
                 },
-                'value': 'pizza'
+                value: 'pizza'
             }
         ]
     },
 
     e_internal_bad_compare: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'bad_compare_favorite_color',
-                'relationship': 'eq',
-                'value': 'orange'
+                concept: 'bad_compare_favorite_color',
+                relationship: Relationships.EQ,
+                value: 'orange'
             }
         ]
     },
     e_internal_bad_cast: {
-        'subject': '987654321',
-        'claims': [
+        subject: '987654321',
+        claims: [
             {
-                'concept': 'bad_cast_favorite_color',
-                'relationship': 'eq',
-                'value': 'orange'
+                concept: 'bad_cast_favorite_color',
+                relationship: Relationships.EQ,
+                value: 'orange'
             }
         ]
     }
-};
+}

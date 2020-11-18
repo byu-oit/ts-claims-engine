@@ -1,63 +1,78 @@
-import {Concept} from './concept';
-import {BadRequest, InternalError} from './error';
+import {Concept} from './concept'
+import {SubjectNotFound, ValidationError} from './error'
+import {Comparator} from './comparator';
+
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<T>;
 
 export interface ClaimsResponse {
-    [key: string]: boolean | InternalError | BadRequest;
+    [key: string]: boolean | ValidationError | SubjectNotFound | Error
 }
 
-export interface Qualifiers<> {
-    [key: string]: any;
+export interface Qualifiers {
+    [key: string]: unknown
 }
 
-export type Relationship = 'gt' | 'gt_or_eq' | 'lt' | 'lt_or_eq' | 'eq' | 'not_eq';
+export enum Relationships {
+    GT = 'gt',
+    GTE = 'gt_or_eq',
+    LT = 'lt',
+    LTE = 'lt_or_eq',
+    EQ = 'eq',
+    NE = 'not_eq'
+}
 
-export type Mode = 'all' | 'any' | 'one';
+export type Relationship = Relationships.GT | Relationships.GTE | Relationships.LT | Relationships.LTE | Relationships.EQ | Relationships.NE
+
+export enum Modes {
+    ONE = 'one',
+    ANY = 'any',
+    ALL = 'all'
+}
+
+export type Mode = Modes.ONE | Modes.ANY | Modes.ALL
 
 export interface ClaimItem {
-    concept: string;
-    relationship: Relationship;
-    value: string;
-    qualifier?: Qualifiers;
+    concept: string
+    relationship: Relationship
+    value: string
+    qualifier?: Qualifiers
 }
 
 export interface Claim {
-    subject: string;
-    mode: Mode;
-    claims: ClaimItem[];
+    subject: string
+    mode?: Mode
+    claims: ClaimItem[]
 }
 
 export interface Claims {
-    [key: string]: Claim;
+    [key: string]: Claim
 }
 
-export interface Concepts {
-    [key: string]: Concept<any>;
-}
-
-export interface EssentialConcepts extends Concepts {
-    subjectExists: Concept<string>;
+export interface ConceptMap {
+    [key: string]: Concept<unknown>;
 }
 
 export interface ConceptInfo {
-    id: string;
-    description: string;
-    longDescription: string;
-    type: string;
-    relationships: Relationship[];
-    qualifiers: string[];
+    name: string
+    description: string
+    longDescription?: string
+    relationships: Relationship[]
+    qualifiers: string[]
 }
 
 export interface ConceptOptions<T> {
-    description: string;
-    longDescription: string;
-    type: string;
-    relationships: Relationship[];
-    qualifiers?: string[];
-    getValue: (subjectId: string, qualifiers?: Qualifiers) => Promise<T>;
-    compare?: (a: T, b: T) => number;
-    cast?: (value: string) => T;
+    name: string
+    description: string
+    longDescription?: string
+    relationships: [Relationship, ...Relationship[]]
+    qualifiers?: string[]
+    getValue: GetValueFunction<T>
+    compare: CompareFn<T> | Comparator<T>
+    cast: CastFn<T>
 }
 
-export type GetValueFunction<T> = (subjectId: string, qualifiers?: Qualifiers) => Promise<T>;
+export type GetValueFunction<T> = (subjectId: string, qualifiers?: Qualifiers) => Promise<T>
 
-export type NumberCompareFn<T> = (left: T, right: T) => number;
+export type CompareFn<T> = (left: T, right: T) => number
+
+export type CastFn<T> = (value: string) => T
