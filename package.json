@@ -12,6 +12,9 @@
     "prepublishOnly": "npm run build && npm test && npm run lint",
     "test": "nyc mocha -r ts-node/register -r source-map-support/register ./test/**/*-test.ts"
   },
+  "files": [
+    "dist/**/*"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/byu-oit/ts-claims-engine.git"
