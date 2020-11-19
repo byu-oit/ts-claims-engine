@@ -14,6 +14,8 @@ import {SubjectNotFound, ValidationError} from './error'
 export class ClaimsAdjudicator {
     readonly concepts: ConceptMap
 
+    readonly subjectExistsKey: string = 'subjectExists'
+
     // eslint-disable-next-line
     constructor(concepts: Concept<any>[]) {
         const subjectExistsKey = 'subjectExists'
@@ -21,8 +23,8 @@ export class ClaimsAdjudicator {
         if (!subjectExistsConcept) {
             throw new Error(`Missing required concept "${subjectExistsKey}" in concepts provided`)
         }
-        const conceptMap: ConceptMap = {[subjectExistsKey]: subjectExistsConcept}
-        this.concepts = concepts.reduce((map, concept) => ({...map, [concept.name]: concept}), conceptMap)
+        this.subjectExistsKey = subjectExistsConcept.name
+        this.concepts = concepts.reduce((map, concept) => ({...map, [concept.name]: concept}), {})
     }
 
     public verifyClaims = async (claims: Claims): Promise<ClaimsResponse> => {
@@ -42,7 +44,7 @@ export class ClaimsAdjudicator {
         if (validationErrors.length) throw new ValidationError(...validationErrors)
 
         const subjectVerified = await this.testClaim(claim.subject, {
-            concept: 'subjectExists',
+            concept: this.subjectExistsKey,
             relationship: Relationships.EQ,
             value: 'true'
         });

@@ -59,7 +59,7 @@ describe('Claims Adjudicator', () => {
 
     describe('getConcept', () => {
         it('will return the concept when it exists', () => {
-            const concept = engine.getConcept('subjectExists')
+            const concept = engine.getConcept('subject_exists')
             assert.isString(concept.description)
             assert.isString(concept.longDescription)
             assert.isString(concept.name)
@@ -74,7 +74,7 @@ describe('Claims Adjudicator', () => {
 
     describe('conceptExists', () => {
         it('will return true when the concept exists', () => {
-            assert.isTrue(engine.conceptExists('subjectExists'))
+            assert.isTrue(engine.conceptExists('subject_exists'))
             assert.isTrue(engine.conceptExists('age'))
             assert.isTrue(engine.conceptExists('favorite_color'))
         })
