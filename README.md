@@ -1,9 +1,17 @@
-# ts-claims-engine
-##### The Claims Adjudicator Module
+<h1 align="center">Claims Adjudicator Module</h1>
 
-[![Build Status](https://travis-ci.org/byu-oit/ts-claims-engine.svg?branch=master)](https://travis-ci.org/byu-oit/ts-claims-engine)
-[![Coverage Status](https://coveralls.io/repos/github/byu-oit/ts-claims-engine/badge.svg?branch=master)](https://coveralls.io/github/byu-oit/ts-claims-engine?branch=master)
-![GitHub package.json version](https://img.shields.io/github/package-json/v/byu-oit/ts-claims-engine)
+<p align="center">
+    <a href="https://github.com/byu-oit/ts-claims-engine-middleware/actions?query=workflow%3ACI">
+      <img alt="CI" src="https://github.com/byu-oit/ts-claims-engine/workflows/CI/badge.svg" />
+    </a>
+    <a href="https://codecov.io/gh/byu-oit/ts-claims-engine">
+      <img alt="Code Coverage" src="https://codecov.io/gh/byu-oit/ts-claims-engine/branch/master/graph/badge.svg" />
+    </a>
+    <img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/byu-oit/ts-claims-engine" />
+    <a href="https://prettier.io/"><img alt="code style: prettier" src="https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier" /></a>
+</p>
+
+<br>
 
 ## Installation
 `npm i @byu-oit/ts-claims-engine`
