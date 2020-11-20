@@ -12,7 +12,7 @@ export interface Qualifiers {
     [key: string]: unknown
 }
 
-export enum Relationships {
+export enum Relationship {
     GT = 'gt',
     GTE = 'gt_or_eq',
     LT = 'lt',
@@ -23,26 +23,22 @@ export enum Relationships {
     DE = 'defined'
 }
 
-export enum Modes {
+export enum Mode {
     ONE = 'one',
     ANY = 'any',
     ALL = 'all'
 }
 
-export type Mode = Modes.ONE | Modes.ANY | Modes.ALL
-
 export type ClaimItem = {
     concept: string
-    relationship: Relationships.GT | Relationships.GTE | Relationships.LT | Relationships.LTE | Relationships.EQ | Relationships.NE
+    relationship: Relationship.GT | Relationship.GTE | Relationship.LT | Relationship.LTE | Relationship.EQ | Relationship.NE
     value: string
     qualifier?: Qualifiers
 } | {
     concept: string
-    relationship: Relationships.UN | Relationships.DE
+    relationship: Relationship.UN | Relationship.DE
     qualifier?: Qualifiers
 }
-
-export type Relationship = ClaimItem['relationship']
 
 export interface Claim {
     subject: string

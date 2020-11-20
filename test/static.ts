@@ -1,4 +1,4 @@
-import {Claims, Concept, Modes, Relationships} from '../lib'
+import {Claims, Concept, Mode, Relationship} from '../lib'
 
 class Food {
     public name: string
@@ -66,7 +66,7 @@ export const testConcepts = [
         name: 'subject_exists',
         description: 'The subject exists',
         longDescription: 'Determines whether a subject is a known entity within the domain.',
-        relationships: [Relationships.EQ, Relationships.NE],
+        relationships: [Relationship.EQ, Relationship.NE],
         qualifiers: ['age'],
         getValue: async (id: string, qualifiers) => {
             if (qualifiers && qualifiers.age) {
@@ -80,21 +80,21 @@ export const testConcepts = [
         name: 'age',
         description: 'The subject is of age',
         longDescription: 'Determine if the subject is of an age',
-        relationships: [Relationships.GT, Relationships.GTE, Relationships.LT, Relationships.LTE, Relationships.EQ, Relationships.NE],
+        relationships: [Relationship.GT, Relationship.GTE, Relationship.LT, Relationship.LTE, Relationship.EQ, Relationship.NE],
         getValue: async (id: string) => subjects[id].age
     }),
     Concept.Number({
         name: 'height',
         description: 'The subject\'s height',
         longDescription: 'The subject\'s measured height in feet',
-        relationships: [Relationships.GT, Relationships.GTE, Relationships.LT, Relationships.LTE, Relationships.EQ, Relationships.NE],
+        relationships: [Relationship.GT, Relationship.GTE, Relationship.LT, Relationship.LTE, Relationship.EQ, Relationship.NE],
         getValue: async (id: string) => subjects[id].height
     }),
     Concept.String({
         name: 'favorite_color',
         description: 'The subject has the favorite color',
         longDescription: 'The subject considers their favorite color to be',
-        relationships: [Relationships.GT, Relationships.GTE, Relationships.LT, Relationships.LTE, Relationships.EQ, Relationships.NE],
+        relationships: [Relationship.GT, Relationship.GTE, Relationship.LT, Relationship.LTE, Relationship.EQ, Relationship.NE],
         getValue: async (id: string) => subjects[id].favorite_color,
         compare: (a, b) => {
             const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
@@ -105,21 +105,21 @@ export const testConcepts = [
         name: 'name',
         description: 'The subject has the name',
         longDescription: 'The subjects has the name',
-        relationships: [Relationships.GT, Relationships.GTE, Relationships.LT, Relationships.LTE, Relationships.EQ, Relationships.NE],
+        relationships: [Relationship.GT, Relationship.GTE, Relationship.LT, Relationship.LTE, Relationship.EQ, Relationship.NE],
         getValue: async (id: string) => subjects[id].name
     }),
     Concept.String({
         name: 'surname',
         description: 'The subject has the surname',
         longDescription: 'The subjects has the surname',
-        relationships: [Relationships.GT, Relationships.GTE, Relationships.LT, Relationships.LTE, Relationships.EQ, Relationships.NE, Relationships.DE, Relationships.UN],
+        relationships: [Relationship.GT, Relationship.GTE, Relationship.LT, Relationship.LTE, Relationship.EQ, Relationship.NE, Relationship.DE, Relationship.UN],
         getValue: async (id: string) => subjects[id].surname
     }),
     Concept.Custom<Food>({
         name: 'favorite_food',
         description: 'The subject has the favorite food',
         longDescription: 'The subject considers their favorite food to be',
-        relationships: [Relationships.EQ, Relationships.NE],
+        relationships: [Relationship.EQ, Relationship.NE],
         getValue: async (id: string) => subjects[id].favorite_food,
         compare: (a, b) => {
             const colors = ['pizza', 'ice cream', 'salad']
@@ -131,7 +131,7 @@ export const testConcepts = [
         name: 'sex',
         description: 'The subject is of the sex',
         longDescription: 'The subject is biologically considered',
-        relationships: [Relationships.EQ, Relationships.NE],
+        relationships: [Relationship.EQ, Relationship.NE],
         async getValue (id: string) { return subjects[id].sex },
         compare () { return 0 },
         cast (value) { return new Sex(value) }
@@ -140,7 +140,7 @@ export const testConcepts = [
         name: 'bad_compare_favorite_color',
         description: 'The subject has the favorite color',
         longDescription: 'The subject considers their favorite color to be',
-        relationships: [Relationships.EQ, Relationships.NE],
+        relationships: [Relationship.EQ, Relationship.NE],
         async getValue () { return '' },
         compare () { throw new Error('Fake Error') },
     }),
@@ -148,7 +148,7 @@ export const testConcepts = [
         name: 'bad_cast_favorite_color',
         description: 'The subject has the favorite color',
         longDescription: 'The subject considers their favorite color to be',
-        relationships: [Relationships.EQ, Relationships.NE],
+        relationships: [Relationship.EQ, Relationship.NE],
         getValue: async (id: string) => subjects[id].favorite_color,
         cast () { throw new Error('Fake Error') }
     })
@@ -160,7 +160,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'favorite_color',
-                relationship: Relationships.EQ,
+                relationship: Relationship.EQ,
                 value: 'blue'
             }
         ]
@@ -170,7 +170,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'favorite_color',
-                relationship: Relationships.NE,
+                relationship: Relationship.NE,
                 value: 'orange'
             }
         ]
@@ -180,7 +180,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'age',
-                relationship: Relationships.GT,
+                relationship: Relationship.GT,
                 value: '15'
             }
         ]
@@ -190,7 +190,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'age',
-                relationship: Relationships.GTE,
+                relationship: Relationship.GTE,
                 value: '16'
             }
         ]
@@ -200,7 +200,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'height',
-                relationship: Relationships.LTE,
+                relationship: Relationship.LTE,
                 value: '6.1'
             }
         ]
@@ -210,29 +210,29 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'height',
-                relationship: Relationships.LT,
+                relationship: Relationship.LT,
                 value: '6.2'
             }
         ]
     },
     t7: {
         subject: '123456987',
-        mode: Modes.ANY,
+        mode: Mode.ANY,
         claims: [
             {
                 concept: 'favorite_food',
-                relationship: Relationships.EQ,
+                relationship: Relationship.EQ,
                 value: 'ice cream'
             }
         ]
     },
     t8: {
         subject: '123456987',
-        mode: Modes.ANY,
+        mode: Mode.ANY,
         claims: [
             {
                 concept: 'subject_exists',
-                relationship: Relationships.EQ,
+                relationship: Relationship.EQ,
                 qualifier: {
                     'age': 25
                 },
@@ -242,27 +242,27 @@ export const testClaims: Claims = {
     },
     t9: {
         subject: '123456987',
-        mode: Modes.ALL,
+        mode: Mode.ALL,
         claims: [
             {
                 concept: 'name',
-                relationship: Relationships.GT,
+                relationship: Relationship.GT,
                 value: 'Alpha'
             },
             {
                 concept: 'name',
-                relationship: Relationships.LT,
+                relationship: Relationship.LT,
                 value: 'Omega'
             }
         ]
     },
     t10: {
         subject: '123456987',
-        mode: Modes.ALL,
+        mode: Mode.ALL,
         claims: [
             {
                 concept: 'surname',
-                relationship: Relationships.UN
+                relationship: Relationship.UN
             }
         ]
     },
@@ -272,7 +272,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'favorite_color',
-                relationship: Relationships.EQ,
+                relationship: Relationship.EQ,
                 value: 'orange'
             }
         ]
@@ -282,7 +282,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'favorite_color',
-                relationship: Relationships.NE,
+                relationship: Relationship.NE,
                 value: 'blue'
             }
         ]
@@ -292,7 +292,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'age',
-                relationship: Relationships.GT,
+                relationship: Relationship.GT,
                 value: '16'
             }
         ]
@@ -302,7 +302,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'age',
-                relationship: Relationships.GTE,
+                relationship: Relationship.GTE,
                 value: '17'
             }
         ]
@@ -312,7 +312,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'age',
-                relationship: Relationships.LTE,
+                relationship: Relationship.LTE,
                 value: '15'
             }
         ]
@@ -322,7 +322,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'age',
-                relationship: Relationships.LT,
+                relationship: Relationship.LT,
                 value: '16'
             }
         ]
@@ -332,45 +332,45 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'subject_exists',
-                relationship: Relationships.EQ,
+                relationship: Relationship.EQ,
                 value: 'false'
             }
         ]
     },
     f8: {
         subject: '123456987',
-        mode: Modes.ANY,
+        mode: Mode.ANY,
         claims: [
             {
                 concept: 'favorite_color',
-                relationship: Relationships.LT,
+                relationship: Relationship.LT,
                 value: 'red'
             }
         ]
     },
     f9: {
         subject: '123456987',
-        mode: Modes.ALL,
+        mode: Mode.ALL,
         claims: [
             {
                 concept: 'name',
-                relationship: Relationships.GT,
+                relationship: Relationship.GT,
                 value: 'Omega'
             },
             {
                 concept: 'name',
-                relationship: Relationships.LT,
+                relationship: Relationship.LT,
                 value: 'Alpha'
             }
         ]
     },
     f10: {
         subject: '123456987',
-        mode: Modes.ALL,
+        mode: Mode.ALL,
         claims: [
             {
                 concept: 'surname',
-                relationship: Relationships.DE,
+                relationship: Relationship.DE,
             }
         ]
     },
@@ -380,7 +380,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'favorite_color',
-                relationship: Relationships.EQ,
+                relationship: Relationship.EQ,
                 value: 'blue'
             }
         ]
@@ -390,7 +390,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'surname',
-                relationship: Relationships.LT,
+                relationship: Relationship.LT,
                 value: 'Alpha'
             }
         ]
@@ -400,7 +400,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'favorite_food',
-                relationship: Relationships.GTE, // Relationship not specified in concept
+                relationship: Relationship.GTE, // Relationship not specified in concept
                 value: 'pizza'
             }
         ]
@@ -410,7 +410,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'subject_exists',
-                relationship: Relationships.EQ,
+                relationship: Relationship.EQ,
                 qualifier: {
                     height: 6.1
                 },
@@ -424,7 +424,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'bad_compare_favorite_color',
-                relationship: Relationships.EQ,
+                relationship: Relationship.EQ,
                 value: 'orange'
             }
         ]
@@ -434,7 +434,7 @@ export const testClaims: Claims = {
         claims: [
             {
                 concept: 'bad_cast_favorite_color',
-                relationship: Relationships.EQ,
+                relationship: Relationship.EQ,
                 value: 'orange'
             }
         ]

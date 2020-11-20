@@ -176,30 +176,79 @@ getConcept(key: string): Concept<any>
 
 ### API Reference
 ```ts
+
+/*********************************************************
+ *                      CLAIMS API
+ *********************************************************/
 interface Claims {
-	[key: string]: Claim
+    [key: string]: Claim
 }
 
 interface Claim {
-	subject: string;
-	mode: Mode;
-	claims: Claims;
+    subject: string;
+    mode: Mode;
+    claims: Claims;
 }
 
-interface ClaimItem {
-    concept: string;
-    relationship: Relationship;
-    value: string;
-    qualifier?: Qualifiers;
+export type ClaimItem = {
+    concept: string
+    relationship: Relationship.GT | Relationship.GTE | Relationship.LT | Relationship.LTE | Relationship.EQ | Relationship.NE
+    value: string
+    qualifier?: Qualifiers
+} | {
+    concept: string
+    relationship: Relationship.UN | Relationship.DE
+    qualifier?: Qualifiers
 }
 
 interface Qualifiers<> {
     [key: string]: any;
 }
 
-type Relationship = 'gt' | 'gt_or_eq' | 'lt' | 'lt_or_eq' | 'eq' | 'not_eq';
+export enum Relationship {
+    GT = 'gt',
+    GTE = 'gt_or_eq',
+    LT = 'lt',
+    LTE = 'lt_or_eq',
+    EQ = 'eq',
+    NE = 'not_eq',
+    UN = 'undefined',
+    DE = 'defined'
+}
 
-type Mode = 'all' | 'any' | 'one';
+export enum Mode {
+    ONE = 'one',
+    ANY = 'any',
+    ALL = 'all'
+}
+
+/*********************************************************
+ *                      CONCEPT API
+ *********************************************************/
+export interface ConceptInfo {
+    name: string
+    description: string
+    longDescription?: string
+    relationships: Relationship[]
+    qualifiers: string[]
+}
+
+export interface ConceptOptions<T> {
+    name: string
+    description: string
+    longDescription?: string
+    relationships: [Relationship, ...Relationship[]]
+    qualifiers?: string[]
+    getValue: GetValueFunction<T>
+    compare: CompareFn<T> | Comparator<T>
+    cast: CastFn<T>
+}
+
+export type GetValueFunction<T> = (subjectId: string, qualifiers?: Qualifiers) => Promise<T | undefined>
+
+export type CompareFn<T> = (left: T, right: T) => number
+
+export type CastFn<T> = (value: string) => T
 ```
 
 ### Related Packages

@@ -1,6 +1,6 @@
 import {camelCase} from 'change-case'
 import {Concept} from './concept'
-import {Claim, ClaimItem, Claims, ClaimsResponse, ConceptInfo, ConceptMap, Modes, Relationships,} from './types'
+import {Claim, ClaimItem, Claims, ClaimsResponse, ConceptInfo, ConceptMap, Mode, Relationship,} from './types'
 import {SubjectNotFound, ValidationError, ValueNotFound} from './error'
 
 export class ClaimsAdjudicator {
@@ -37,12 +37,12 @@ export class ClaimsAdjudicator {
 
         const subjectVerified = await this.testClaim(claim.subject, {
             concept: this.subjectExistsKey,
-            relationship: Relationships.EQ,
+            relationship: Relationship.EQ,
             value: 'true'
         });
         if (!subjectVerified) throw new SubjectNotFound(claim.subject);
 
-        if (mode && [Modes.ONE, Modes.ANY].includes(mode)) {
+        if (mode && [Mode.ONE, Mode.ANY].includes(mode)) {
             return await this.testClaimsAny(subject, claims)
         } else {
             return await this.testClaimsAll(subject, claims)
@@ -67,19 +67,19 @@ export class ClaimsAdjudicator {
         const {compare, cast, getValue} = this.getConcept(claim.concept) as Concept<unknown>
 
         const actual = await getValue(subject, claim.qualifier)
-        if (actual === undefined && ![Relationships.UN, Relationships.DE].includes(claim.relationship)) {
+        if (actual === undefined && ![Relationship.UN, Relationship.DE].includes(claim.relationship)) {
             throw new ValueNotFound(subject, claim.concept)
         }
 
         switch (claim.relationship) {
-            case Relationships.GT: return compare.greaterThan(actual, cast(claim.value))
-            case Relationships.GTE: return compare.greaterThanOrEqual(actual, cast(claim.value))
-            case Relationships.LT: return compare.lessThan(actual, cast(claim.value))
-            case Relationships.LTE: return compare.lessThanOrEqual(actual, cast(claim.value))
-            case Relationships.EQ: return compare.equal(actual, cast(claim.value))
-            case Relationships.NE: return compare.notEqual(actual, cast(claim.value))
-            case Relationships.UN: return compare.isUndefined(actual)
-            case Relationships.DE: return compare.isDefined(actual)
+            case Relationship.GT: return compare.greaterThan(actual, cast(claim.value))
+            case Relationship.GTE: return compare.greaterThanOrEqual(actual, cast(claim.value))
+            case Relationship.LT: return compare.lessThan(actual, cast(claim.value))
+            case Relationship.LTE: return compare.lessThanOrEqual(actual, cast(claim.value))
+            case Relationship.EQ: return compare.equal(actual, cast(claim.value))
+            case Relationship.NE: return compare.notEqual(actual, cast(claim.value))
+            case Relationship.UN: return compare.isUndefined(actual)
+            case Relationship.DE: return compare.isDefined(actual)
         }
     }
 

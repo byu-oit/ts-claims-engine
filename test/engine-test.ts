@@ -2,7 +2,7 @@ import {assert} from 'chai'
 import * as _ from 'lodash'
 import {
     ClaimsAdjudicator,
-    Relationships,
+    Relationship,
     SubjectNotFound,
     ValidationError, ValueNotFound
 } from '../lib'
@@ -51,7 +51,7 @@ describe('Claims Adjudicator', () => {
                 })
                 assert.isArray(concept.relationships)
                 concept.relationships.forEach(relationship => {
-                    assert.isTrue(Object.values(Relationships).includes(relationship))
+                    assert.isTrue(Object.values(Relationship).includes(relationship))
                 })
             })
         })
