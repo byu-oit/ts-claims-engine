@@ -1,15 +1,7 @@
 import {camelCase} from 'change-case'
 import {Concept} from './concept'
-import {
-    Claim,
-    ClaimItem,
-    Claims,
-    ClaimsResponse,
-    ConceptInfo, ConceptMap,
-    Modes,
-    Relationships,
-} from './types'
-import {SubjectNotFound, ValidationError} from './error'
+import {Claim, ClaimItem, Claims, ClaimsResponse, ConceptInfo, ConceptMap, Modes, Relationships,} from './types'
+import {SubjectNotFound, ValidationError, ValueNotFound} from './error'
 
 export class ClaimsAdjudicator {
     readonly concepts: ConceptMap
@@ -61,7 +53,7 @@ export class ClaimsAdjudicator {
         return Object.prototype.hasOwnProperty.call(this.concepts, key)
     }
 
-    public getConcept = (key: string): Concept<unknown> => {
+    public getConcept = (key: string): Concept<unknown> | undefined => {
         return this.concepts[key]
     }
 
@@ -72,18 +64,22 @@ export class ClaimsAdjudicator {
     }
 
     private testClaim = async (subject: string, claim: ClaimItem): Promise<boolean> => {
-        const {compare, cast, getValue} = this.getConcept(claim.concept)
+        const {compare, cast, getValue} = this.getConcept(claim.concept) as Concept<unknown>
 
-        const expected = cast(claim.value)
         const actual = await getValue(subject, claim.qualifier)
+        if (actual === undefined && ![Relationships.UN, Relationships.DE].includes(claim.relationship)) {
+            throw new ValueNotFound(subject, claim.concept)
+        }
 
         switch (claim.relationship) {
-            case Relationships.GT: return compare.greaterThan(actual, expected)
-            case Relationships.GTE: return compare.greaterThanOrEqual(actual, expected)
-            case Relationships.LT: return compare.lessThan(actual, expected)
-            case Relationships.LTE: return compare.lessThanOrEqual(actual, expected)
-            case Relationships.EQ: return compare.equal(actual, expected)
-            case Relationships.NE: return compare.notEqual(actual, expected)
+            case Relationships.GT: return compare.greaterThan(actual, cast(claim.value))
+            case Relationships.GTE: return compare.greaterThanOrEqual(actual, cast(claim.value))
+            case Relationships.LT: return compare.lessThan(actual, cast(claim.value))
+            case Relationships.LTE: return compare.lessThanOrEqual(actual, cast(claim.value))
+            case Relationships.EQ: return compare.equal(actual, cast(claim.value))
+            case Relationships.NE: return compare.notEqual(actual, cast(claim.value))
+            case Relationships.UN: return compare.isUndefined(actual)
+            case Relationships.DE: return compare.isDefined(actual)
         }
     }
 
@@ -104,16 +100,22 @@ export class ClaimsAdjudicator {
     private validateClaimItem (claimItem: ClaimItem): string[] {
         const errors: string[] = []
 
-        const {concept, qualifier, relationship} = claimItem
-        const {qualifiers, relationships} = this.getConcept(concept)
+        const {concept: conceptName, qualifier, relationship} = claimItem
+        const concept = this.getConcept(conceptName)
+        if (!concept) {
+            errors.push(`Concept ${conceptName} is not defined`)
+            return errors
+        }
 
+        const {qualifiers, relationships} = concept
         if (qualifier) {
             const invalidQualifiers = Object.keys(qualifier).filter(q => !qualifiers.includes(q))
-            if (invalidQualifiers.length) errors.push(...invalidQualifiers.map(q => `Qualifier ${q} is not defined for concept ${concept}`))
+            if (invalidQualifiers.length) errors.push(...invalidQualifiers.map(q => `Qualifier ${q} is not defined for concept ${conceptName}`))
         }
 
         const validRelationship = relationships.includes(relationship)
-        if (!validRelationship) errors.push(`Relationship ${relationship} is not defined for concept ${concept}`)
+        if (!validRelationship) errors.push(`Relationship ${relationship} is not defined for concept ${conceptName}`)
+
         return errors
     }
 }

@@ -1,11 +1,11 @@
 import {Concept} from './concept'
-import {SubjectNotFound, ValidationError} from './error'
+import {NotFound, ValidationError} from './error'
 import {Comparator} from './comparator';
 
 export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<T>;
 
 export interface ClaimsResponse {
-    [key: string]: boolean | ValidationError | SubjectNotFound | Error
+    [key: string]: boolean | ValidationError | NotFound | Error
 }
 
 export interface Qualifiers {
@@ -18,10 +18,10 @@ export enum Relationships {
     LT = 'lt',
     LTE = 'lt_or_eq',
     EQ = 'eq',
-    NE = 'not_eq'
+    NE = 'not_eq',
+    UN = 'undefined',
+    DE = 'defined'
 }
-
-export type Relationship = Relationships.GT | Relationships.GTE | Relationships.LT | Relationships.LTE | Relationships.EQ | Relationships.NE
 
 export enum Modes {
     ONE = 'one',
@@ -31,12 +31,18 @@ export enum Modes {
 
 export type Mode = Modes.ONE | Modes.ANY | Modes.ALL
 
-export interface ClaimItem {
+export type ClaimItem = {
     concept: string
-    relationship: Relationship
+    relationship: Relationships.GT | Relationships.GTE | Relationships.LT | Relationships.LTE | Relationships.EQ | Relationships.NE
     value: string
     qualifier?: Qualifiers
+} | {
+    concept: string
+    relationship: Relationships.UN | Relationships.DE
+    qualifier?: Qualifiers
 }
+
+export type Relationship = ClaimItem['relationship']
 
 export interface Claim {
     subject: string
@@ -71,7 +77,7 @@ export interface ConceptOptions<T> {
     cast: CastFn<T>
 }
 
-export type GetValueFunction<T> = (subjectId: string, qualifiers?: Qualifiers) => Promise<T>
+export type GetValueFunction<T> = (subjectId: string, qualifiers?: Qualifiers) => Promise<T | undefined>
 
 export type CompareFn<T> = (left: T, right: T) => number
 

@@ -4,7 +4,7 @@ import {
     ClaimsAdjudicator,
     Relationships,
     SubjectNotFound,
-    ValidationError
+    ValidationError, ValueNotFound
 } from '../lib'
 import {testClaims, testConcepts} from './static'
 
@@ -51,7 +51,7 @@ describe('Claims Adjudicator', () => {
                 })
                 assert.isArray(concept.relationships)
                 concept.relationships.forEach(relationship => {
-                    assert.isTrue([Relationships.GT, Relationships.GTE, Relationships.LT, Relationships.LTE, Relationships.EQ, Relationships.NE].includes(relationship))
+                    assert.isTrue(Object.values(Relationships).includes(relationship))
                 })
             })
         })
@@ -60,11 +60,14 @@ describe('Claims Adjudicator', () => {
     describe('getConcept', () => {
         it('will return the concept when it exists', () => {
             const concept = engine.getConcept('subject_exists')
-            assert.isString(concept.description)
-            assert.isString(concept.longDescription)
-            assert.isString(concept.name)
-            assert.isArray(concept.qualifiers)
-            assert.isFunction(concept.getValue)
+            assert.isDefined(concept)
+            if (concept) {
+                assert.isString(concept.description)
+                assert.isString(concept.longDescription)
+                assert.isString(concept.name)
+                assert.isArray(concept.qualifiers)
+                assert.isFunction(concept.getValue)
+            }
         })
         it('will return undefined when the concept is not found', () => {
             const concept = engine.getConcept('not_test_concept')
@@ -85,7 +88,7 @@ describe('Claims Adjudicator', () => {
 
     describe('verifyClaims', () => {
         it('will return an object, listing all true claim responses', async () => {
-            const claims = _.pick(testClaims, Object.keys(testClaims).filter(key => key.startsWith('t')))
+            const claims = _.pick(testClaims, Object.keys(testClaims).filter(key => key.startsWith('t10')))
             const responses = await engine.verifyClaims(claims)
             Object.values(responses).forEach(response => {
                 assert.isTrue(response)
@@ -110,6 +113,13 @@ describe('Claims Adjudicator', () => {
             const responses = await engine.verifyClaims(claims)
             Object.values(responses).forEach(response => {
                 assert.isTrue(response instanceof SubjectNotFound)
+            })
+        })
+        it('will return an object, with a value not found error claim response', async () => {
+            const claims = _.pick(testClaims, ['e_undefined_value'])
+            const responses = await engine.verifyClaims(claims)
+            Object.values(responses).forEach(response => {
+                assert.isTrue(response instanceof ValueNotFound)
             })
         })
         it('will return an object, listing all internal error claim verification responses', async () => {

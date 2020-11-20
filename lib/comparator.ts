@@ -38,4 +38,12 @@ export class Comparator<T> {
     public greaterThanOrEqual(a: T, b: T): boolean {
         return this.greaterThan(a, b) || this.equal(a, b)
     }
+
+    public isUndefined(a?: T): boolean {
+        return a === undefined
+    }
+
+    public isDefined(a?: T): boolean {
+        return a !== undefined
+    }
 }

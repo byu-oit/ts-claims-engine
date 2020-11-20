@@ -21,6 +21,7 @@ class Sex {
 export const subjects: {
     [key: string]: {
         name: string
+        surname?: string
         age: number
         birth_date: string
         height: number
@@ -31,6 +32,7 @@ export const subjects: {
 } = {
     '123456789': {
         name: 'Joe',
+        surname: 'Fabio',
         age: 23,
         birth_date: '1995-10-23',
         height: 5.5,
@@ -40,6 +42,7 @@ export const subjects: {
     },
     '987654321': {
         name: 'Bill',
+        surname: 'White',
         age: 16,
         birth_date: '2000-07-11',
         height: 6.1,
@@ -104,6 +107,13 @@ export const testConcepts = [
         longDescription: 'The subjects has the name',
         relationships: [Relationships.GT, Relationships.GTE, Relationships.LT, Relationships.LTE, Relationships.EQ, Relationships.NE],
         getValue: async (id: string) => subjects[id].name
+    }),
+    Concept.String({
+        name: 'surname',
+        description: 'The subject has the surname',
+        longDescription: 'The subjects has the surname',
+        relationships: [Relationships.GT, Relationships.GTE, Relationships.LT, Relationships.LTE, Relationships.EQ, Relationships.NE, Relationships.DE, Relationships.UN],
+        getValue: async (id: string) => subjects[id].surname
     }),
     Concept.Custom<Food>({
         name: 'favorite_food',
@@ -246,6 +256,16 @@ export const testClaims: Claims = {
             }
         ]
     },
+    t10: {
+        subject: '123456987',
+        mode: Modes.ALL,
+        claims: [
+            {
+                concept: 'surname',
+                relationship: Relationships.UN
+            }
+        ]
+    },
 
     f1: {
         subject: '123456789',
@@ -344,6 +364,16 @@ export const testClaims: Claims = {
             }
         ]
     },
+    f10: {
+        subject: '123456987',
+        mode: Modes.ALL,
+        claims: [
+            {
+                concept: 'surname',
+                relationship: Relationships.DE,
+            }
+        ]
+    },
 
     e_unidentified_subject: {
         subject: 'Not a subject',
@@ -352,6 +382,16 @@ export const testClaims: Claims = {
                 concept: 'favorite_color',
                 relationship: Relationships.EQ,
                 value: 'blue'
+            }
+        ]
+    },
+    e_undefined_value: {
+        subject: '123456987',
+        claims: [
+            {
+                concept: 'surname',
+                relationship: Relationships.LT,
+                value: 'Alpha'
             }
         ]
     },
