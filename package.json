@@ -6,10 +6,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "npm run clean && tsc",
-    "clean": "del-cli dist",
+    "clean": "rimraf dist",
     "coverage": "nyc report --reporter=json",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "prepublishOnly": "npm run build && npm test && npm run lint",
     "test": "nyc mocha -r ts-node/register -r source-map-support/register ./test/**/*-test.ts"
   },
   "files": [
@@ -34,7 +33,6 @@
     "@typescript-eslint/eslint-plugin": "^4.8.1",
     "@typescript-eslint/parser": "^4.8.1",
     "chai": "^4.2.0",
-    "del-cli": "^3.0.1",
     "eslint": "^7.13.0",
     "eslint-config-prettier": "^6.15.0",
     "husky": "^4.3.0",
@@ -43,6 +41,7 @@
     "mocha": "^6.2.3",
     "nyc": "^15.1.0",
     "prettier": "^2.1.2",
+    "rimraf": "^3.0.2",
     "source-map-support": "^0.5.19",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7"

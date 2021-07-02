@@ -23,13 +23,13 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Lint
+        run: npm run lint
+
       - name: Test
         run: |
           npm test
           npm run coverage
-
-      - name: Lint
-        run: npm run lint
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
