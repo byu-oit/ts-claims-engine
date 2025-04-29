@@ -34,6 +34,13 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Report test coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: byu-oit/ts-claims-engine
+          fail_ci_if_error: true
+
       - name: Publish
         run: npm publish
         env:
