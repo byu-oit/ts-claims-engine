@@ -10,6 +10,10 @@
     "strict": true,
     "strictNullChecks": true,
     "moduleResolution": "node",
+    "types": [
+      "node",
+      "mocha"
+    ],
     "lib": [
       "es7",
       "es2017.object"
